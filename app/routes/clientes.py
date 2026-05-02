@@ -1,0 +1,44 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app import models, schemas
+from app.database import get_db
+
+router = APIRouter(prefix="/clientes", tags=["Clientes"])
+
+@router.get("/", response_model=list[schemas.ClienteResponse])
+def listar_clientes(db: Session = Depends(get_db)):
+    return db.query(models.Cliente).all()
+
+@router.get("/{cliente_id}", response_model=schemas.ClienteResponse)
+def obtener_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    cliente = db.query(models.Cliente).filter(models.Cliente.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    return cliente
+
+@router.post("/", response_model=schemas.ClienteResponse, status_code=201)
+def crear_cliente(cliente: schemas.ClienteCreate, db: Session = Depends(get_db)):
+    db_cliente = models.Cliente(**cliente.model_dump())
+    db.add(db_cliente)
+    db.commit()
+    db.refresh(db_cliente)
+    return db_cliente
+
+@router.put("/{cliente_id}", response_model=schemas.ClienteResponse)
+def actualizar_cliente(cliente_id: int, cliente: schemas.ClienteCreate, db: Session = Depends(get_db)):
+    db_cliente = db.query(models.Cliente).filter(models.Cliente.id == cliente_id).first()
+    if not db_cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    for key, value in cliente.model_dump().items():
+        setattr(db_cliente, key, value)
+    db.commit()
+    db.refresh(db_cliente)
+    return db_cliente
+
+@router.delete("/{cliente_id}", status_code=204)
+def eliminar_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    db_cliente = db.query(models.Cliente).filter(models.Cliente.id == cliente_id).first()
+    if not db_cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    db.delete(db_cliente)
+    db.commit()
