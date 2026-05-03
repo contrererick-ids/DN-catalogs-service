@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum as SAEnum, ForeignKey, DECIMAL
-from app.database import Base
+from .database import Base
 import enum
 
 class TipoDireccion(enum.Enum):
