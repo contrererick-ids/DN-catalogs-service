@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
-from .database import Base, engine
-from .routes import clientes, domicilios, productos
+from app.database import Base, engine
+from app.routes import clientes, domicilios, productos
 from dotenv import load_dotenv
 
 load_dotenv()
